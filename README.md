@@ -1,94 +1,65 @@
-# Human API
+# Human API – Learning Prototype
 
-A developer-matching web app that helps a company find the best developer for a task based on their skills, past projects and completed work.
+A small educational MVP for the Human API project. It demonstrates task submission, transparent keyword-based candidate ranking, and evidence explanations using fictional employee data only.
 
-SWE 401 group project, Abu Dhabi University, Fall 2026.
+## Team / project context
+- Project: Human API – Intelligent Organizational Expertise Discovery System
+- Students: Abdelrahman Dabash and Fares Farghaly
+- Course context: SWE 401
+- This folder is a learning prototype, not a production HR tool or submission-ready project.
 
-## Team Members
-- Abdullah Hisham Ibrahim
-- Abdel Rahman Dabash
-- Zaid Himmo
-
-
-## Problem
-Managers often assign tasks based on CVs or memory, which do not show a person's real skills. Human API compares a task description with each developer's recorded skills, projects and completed work, and suggests a ranked list of suitable developers with a short explanation for each. The final decision always stays with the manager.
-
-## Key Features
-- Log in and log out, with protected pages and a 30-minute session timeout
-- Task form with required-field checks and clear error messages
-- Lexical matching of the task against skills, projects and completed work
-- Ranked list of developers with a score and an explanation for each
-- "Limited evidence" warning when a suggestion is based on only one item
-- Clear message when no developer matches the task
-- All data stored in PostgreSQL
+## Key features
+- Submit a task title and natural-language description.
+- Compare task terms with fictional employee skills, project summaries and completed tasks.
+- Return candidates ordered by a deterministic lexical score.
+- Show matched terms, evidence sources and an evidence-strength label.
+- Keep final hiring or assignment decisions with a human manager.
 
 ## Technologies
-- Python 3.14
-- Flask (web framework)
-- PostgreSQL 17 (database)
-- psycopg2 (PostgreSQL driver for Python)
-- HTML templates (Jinja2)
-- Git and GitHub
-- VS Code and pgAdmin 4
+- Frontend: React, Vite, JavaScript
+- Backend: Python, FastAPI, Pydantic
+- Tests: pytest, FastAPI TestClient
 
 ## Prerequisites
-- Python 3.10 or newer
-- PostgreSQL 17 (with pgAdmin 4)
-- Git
+- Python 3.10+
+- Node.js 18+
+- npm
 
-## Installation
-1. Clone the repository:
-   ```
-   git clone https://github.com/Abdullah503100/Human-API.git
-   cd Human-API
-   ```
-2. Install the Python libraries:
-   ```
-   pip install -r requirements.txt
-   ```
-3. In pgAdmin, create a database named `humanapi`.
-4. Open the Query Tool on `humanapi` and run `schema.sql`, then `sample_data.sql`.
+## Installation and run
+
+### 1. Start the backend
+```bash
+cd backend
+python -m venv .venv
+# Windows PowerShell:
+.venv\\Scripts\\Activate.ps1
+# macOS/Linux:
+# source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+The API runs at http://127.0.0.1:8000. Interactive API docs: http://127.0.0.1:8000/docs.
+
+### 2. Start the frontend in a second terminal
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open the local URL printed by Vite (usually http://localhost:5173).
 
 ## Configuration
-The app reads the database settings from environment variables:
+The learning MVP uses fictional in-memory sample records and does not connect to PostgreSQL. This keeps the demonstration easy to run. The Phase 4 design document specifies PostgreSQL as the intended persistent database for the next implementation increment. Do not use real employee information in this demo.
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `DB_HOST` | `localhost` | Database server |
-| `DB_PORT` | `5432` | Database port |
-| `DB_NAME` | `humanapi` | Database name |
-| `DB_USER` | `postgres` | Database user |
-| `DB_PASSWORD` | (none) | Your PostgreSQL password |
-| `SECRET_KEY` | development key | Key used to sign sessions |
-
-In PowerShell, set your password before running the app:
+## How to test
+From the `backend` directory, with the virtual environment active:
+```bash
+pytest -q
 ```
-$env:DB_PASSWORD="your_password"
-```
+Tests cover health status, employee listing, matching output, required-field validation and unknown employee handling. Capture your own terminal output and screenshots after running the tests; do not claim tests passed before execution.
 
-## How to Run
-1. Create the sample login users (only once):
-   ```
-   python create_users.py
-   ```
-2. Start the app:
-   ```
-   python app.py
-   ```
-3. Open `http://127.0.0.1:5000` in your browser.
-4. Log in with a sample account:
+## Matching method and limitations
+The prototype tokenizes the task title and description and calculates a simple overlap percentage against employee skills, project summaries and completed tasks. The score is a keyword indicator only. It is not a trained AI model, does not establish actual competence, and must not be used to make employment decisions. The prototype has no authentication, role-based authorization, audit logging, persistent database, or production security controls.
 
-| Email | Password | Role |
-|---|---|---|
-| admin@humanapi.test | admin123 | admin |
-| manager@humanapi.test | manager123 | manager |
-| hr@humanapi.test | hr123 | hr |
-
-## How to Test
-The test cases are listed in `tests/test_plan.md`. To try the main ones:
-1. Open the home page without logging in. You are sent to the login page.
-2. Log in with a wrong password. You see "Wrong email or password."
-3. Log in correctly, click "Submit a new task" and submit with empty fields. Both error messages appear.
-4. Submit the task "Payroll API" with the description "Need Python, Flask and PostgreSQL experience". A ranked list appears with Sara Ali first.
-5. Submit "Java bug fix" / "Fix a small Java issue". Hamad Rashid appears with a "Limited evidence" note.
-6. Submit "Garden design" / "Plan an underwater basket weaving garden". The app shows that no developer matches.
+## Privacy and security
+All records are fictional. Never commit passwords, API keys, tokens, real employee records or private company information. Any future deployment requires authentication, authorization, secure storage, retention rules, fairness evaluation and human oversight.\n
