@@ -80,5 +80,66 @@ def home():
     )
 
 
+
+
+@app.route("/tasks/new", methods=["GET", "POST"])
+@login_required
+def new_task():
+    """FR-04 to FR-09: enter, check and submit a task."""
+    errors = {}
+    title = ""
+    description = ""
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        description = request.form.get("description", "").strip()
+
+        # FR-06 / FR-07: check required fields and explain the problem
+        if not title:
+            errors["title"] = "Please enter a short title for the task."
+        elif len(title) > 150:
+            errors["title"] = "The title must be 150 characters or fewer."
+        if not description:
+            errors["description"] = "Please describe the task and the skills it needs."
+
+        if not errors:
+            conn = get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO tasks (title, description, created_by) "
+                "VALUES (%s, %s, %s) RETURNING id",
+                (title, description, session["user_id"]),
+            )
+            task_id = cur.fetchone()[0]
+            conn.commit()
+            cur.close()
+            conn.close()
+            flash("Your task was submitted.")
+            return redirect(url_for("view_task", task_id=task_id))
+
+    return render_template(
+        "new_task.html", errors=errors, title=title, description=description
+    )
+
+
+@app.route("/tasks/<int:task_id>")
+@login_required
+def view_task(task_id):
+    """FR-10: show the submitted task and its status."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT title, description, status FROM tasks WHERE id = %s", (task_id,)
+    )
+    task = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if task is None:
+        flash("That task was not found.")
+        return redirect(url_for("home"))
+    return render_template("task.html", task=task)
+
+
 if __name__ == "__main__":
     app.run(debug=True)

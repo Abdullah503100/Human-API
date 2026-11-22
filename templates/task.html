@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Human API - Task</title>
+</head>
+<body>
+    <h1>Human API</h1>
+    <p><a href="{{ url_for('home') }}">Home</a> |
+       <a href="{{ url_for('logout') }}">Log out</a></p>
+
+    {% with messages = get_flashed_messages() %}
+        {% for message in messages %}
+            <p><strong>{{ message }}</strong></p>
+        {% endfor %}
+    {% endwith %}
+
+    <h2>{{ task[0] }}</h2>
+    <p>{{ task[1] }}</p>
+    <p>Status: <strong>{{ task[2] }}</strong></p>
+</body>
+</html>
