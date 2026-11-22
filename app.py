@@ -6,6 +6,7 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from werkzeug.security import check_password_hash
 
 from database import get_connection
+from matching import match_task
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -80,8 +81,6 @@ def home():
     )
 
 
-
-
 @app.route("/tasks/new", methods=["GET", "POST"])
 @login_required
 def new_task():
@@ -114,7 +113,13 @@ def new_task():
             conn.commit()
             cur.close()
             conn.close()
-            flash("Your task was submitted.")
+
+            # FR-09 / FR-23: start matching for the new task
+            try:
+                match_task(task_id)
+                flash("Your task was submitted and matched.")
+            except Exception:
+                flash("Your task was saved, but matching could not run. Please try again.")
             return redirect(url_for("view_task", task_id=task_id))
 
     return render_template(
@@ -125,20 +130,46 @@ def new_task():
 @app.route("/tasks/<int:task_id>")
 @login_required
 def view_task(task_id):
-    """FR-10: show the submitted task and its status."""
+    """FR-10, FR-42, FR-43: show the task, its status and ranked candidates."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
         "SELECT title, description, status FROM tasks WHERE id = %s", (task_id,)
     )
     task = cur.fetchone()
-    cur.close()
-    conn.close()
 
     if task is None:
+        cur.close()
+        conn.close()
         flash("That task was not found.")
         return redirect(url_for("home"))
-    return render_template("task.html", task=task)
+
+    cur.execute(
+        "SELECT id, outcome FROM match_results WHERE task_id = %s "
+        "ORDER BY id DESC LIMIT 1",
+        (task_id,),
+    )
+    result = cur.fetchone()
+
+    recommendations = []
+    if result and result[1] == "results":
+        cur.execute(
+            "SELECT r.rank, d.name, d.job_title, r.score, r.explanation, "
+            "r.limited_evidence FROM recommendations r "
+            "JOIN developer_profiles d ON d.id = r.profile_id "
+            "WHERE r.match_result_id = %s ORDER BY r.rank",
+            (result[0],),
+        )
+        recommendations = cur.fetchall()
+
+    cur.close()
+    conn.close()
+    return render_template(
+        "task.html",
+        task=task,
+        outcome=result[1] if result else None,
+        recommendations=recommendations,
+    )
 
 
 if __name__ == "__main__":
