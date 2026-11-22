@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Human API</title>
+</head>
+<body>
+    <h1>Human API</h1>
+    <p>Logged in as {{ user_name }} ({{ role }}) |
+       <a href="{{ url_for('logout') }}">Log out</a></p>
+
+    <h2>Developers</h2>
+    <ul>
+        {% for dev_name, job_title in developers %}
+            <li>{{ dev_name }} - {{ job_title or "No job title" }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
